@@ -5,9 +5,8 @@ import random
 import time
 
 # Count packets
-traffic_counter = Counter('count_traffic', 'total calls to legit ports',  ['port'])
-nmap_counter = Counter('count_nmap', 'total calls to suspicious ports',  ['ip_city', 'port'])
-ssh_counter = Counter('count_ssh', 'total packets to ssh',  ['ip_city', 'port'])
+legit_counter = Counter('count_legit', 'total calls to legit ports',  ['port'])
+suspicious_counter = Counter('count_suspicious', 'total calls to suspicious ports',  ['ip_city', 'port'])
 ip_map = {}
 def log_or_get_city(ip):
     if ip in ip_map:
@@ -22,19 +21,14 @@ def log_or_get_city(ip):
     return ip_city
 
 def count(p):
-    # if p.dst == p.src:
-    #     return
-    # if IP in p:
-    #     if hasattr(p, 'dport'):
+    if p.dst == p.src:
+        return
     try:
-        if p.dport in [80, 443, 3000, 8080]:
-            traffic_counter.labels(port=p.dport).inc()
-        elif p.dport == 22:
+        if p.dport in [80, 3000]:
+            legit_counter.labels(port=p.dport).inc()
+        else:
             ip = p[IP].src
-            ssh_counter.labels(ip_city=log_or_get_city(ip), port="22").inc()
-        elif p.dport < 1024:
-            ip = p[IP].src
-            nmap_counter.labels(ip_city=log_or_get_city(ip), port=p.dport).inc()
+            suspicious_counter.labels(ip_city=log_or_get_city(ip), port=p.dport).inc()
     except:
         pass
 
