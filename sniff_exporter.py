@@ -7,6 +7,7 @@ import time
 # Count packets
 legit_counter = Counter('count_legit', 'total calls to legit ports',  ['port'])
 suspicious_counter = Counter('count_suspicious', 'total calls to suspicious ports',  ['ip_city', 'port'])
+external_ip = requests.get('https://api.ipify.org/').text
 ip_map = {}
 
 def log_or_get_city(ip):
@@ -22,10 +23,8 @@ def log_or_get_city(ip):
     return ip_city
 
 def count(p):
-    if p.dst == p.src:
-        return
     try:
-        if p.dport in [80, 3000]:
+        if p.dport in [80, 443, 3000]:
             legit_counter.labels(port=p.dport).inc()
         elif p.dport < 1024 :
             ip = p[IP].src
@@ -35,5 +34,5 @@ def count(p):
 
 if __name__ == '__main__':
     start_http_server(6789)
-    sniff(prn=count, filter='tcp', store=0)
+    sniff(prn=count, filter='tcp and not (src host 127.0.0.1 or src host {})'.format(external_ip), store=0)
 
