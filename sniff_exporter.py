@@ -39,6 +39,6 @@ def count(p):
                 nmap_counter.labels(ip_city=log_or_get_city(ip), port=p.dport).inc()
 
 if __name__ == '__main__':
-    start_http_server(8000)
+    start_http_server(6789)
     sniff(prn=count)
 
