@@ -3,28 +3,45 @@ from prometheus_client import start_http_server, Counter
 import requests
 import random
 import time
+import threading
 
 # Count packets
-counter = Counter('traffic', 'total calls to suspicious ports',  ['ip_city', 'port'])
+ssh_counter = Counter('ssh_counter', 'total calls to suspicious ports',  ['ip_country'])
+port_counter = Counter('port_counter', 'total calls to various ports',  ['port'])
 ip_map = {}
 
-def log_or_get_city(ip):
+def set_interval(func, sec):
+    def func_wrapper():
+        set_interval(func, sec)
+        func()
+    t = threading.Timer(sec, func_wrapper)
+    t.start()
+    return t
+
+def clear_map():
+    ip_map = {}
+
+set_interval(clear_map, 604800)
+
+def log_or_get_country(ip):
     if ip in ip_map:
-        ip_city = ip_map[ip]
+        ip_country = ip_map[ip]
     else:
         try:
-            ip_city = requests.get('http://ip-api.com/json/' + ip).json()['city']
-            ip_map[ip] = ip_city
+            ip_country = requests.get('http://ip-api.com/json/' + ip).json()['country']
+            ip_map[ip] = ip_country
         except:
-            ip_city = "N/A"
-        ip_map[ip] = ip_city
-    return ip_city
+            ip_country = "N/A"
+        ip_map[ip] = ip_country
+    return ip_country
 
 def count(p):
     try:
-        if p.dport < 10000:
+        if p.dport == 22:
             ip = p[IP].src
-            counter.labels(ip_city=log_or_get_city(ip), port=p.dport).inc()
+            ssh_counter.labels(ip_city=log_or_get_country(ip)).inc()
+        elif p.dport < 1000 or p.dport in [8080, 3000, 5000, 1080, 10080, 20080, 30080]:
+            port_counter.labels(port=p.dport).inc()
     except:
         pass
 
