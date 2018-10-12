@@ -39,7 +39,7 @@ def count(p):
     try:
         if p.dport == 22:
             ip = p[IP].src
-            ssh_counter.labels(ip_city=log_or_get_country(ip)).inc()
+            ssh_counter.labels(ip_country=log_or_get_country(ip)).inc()
         elif p.dport < 1000 or p.dport in [8080, 3000, 5000, 1080, 10080, 20080, 30080]:
             port_counter.labels(port=p.dport).inc()
     except:
