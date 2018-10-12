@@ -6,8 +6,8 @@ import time
 import threading
 
 # Count packets
-ssh_counter = Counter('ssh_counter', 'total calls to suspicious ports',  ['ip_country'])
-port_counter = Counter('port_counter', 'total calls to various ports',  ['port'])
+ssh_counter = Counter('ssh_counter', 'ssh packets per country',  ['ip_country'])
+port_counter = Counter('port_counter', 'total calls per various ports',  ['port'])
 ip_map = {}
 
 def set_interval(func, sec):
